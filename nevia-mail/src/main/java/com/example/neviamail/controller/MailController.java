@@ -19,7 +19,6 @@ public class MailController {
 
     @PostMapping("/send")
     public void send(@RequestBody BookingDto reservation){
-        //ReservationInfoDto reservation2 = new ReservationInfoDto("anas.altundag@gmail.com","Anas","Altundag",new Timestamp(2022,11,18,17,00,00,0),new Timestamp(2022,11,18,17,00,00,0),"Info 2");
         mailService.sendSimpleMessage(reservation);
     }
 
