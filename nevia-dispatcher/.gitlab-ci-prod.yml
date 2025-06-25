@@ -1,0 +1,61 @@
+stages:
+  - build
+  - test
+  - deploy
+
+image: 'maven:3.8.1-openjdk-17-slim'
+
+variables:
+  MAVEN_OPTS: >-
+    -Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true
+  MAVEN_CLI_OPTS: >-
+    --batch-mode --errors --fail-at-end --show-version --no-transfer-progress
+    -DinstallAtEnd=true -DdeployAtEnd=true
+
+cache:
+  paths:
+    - .m2/repository
+
+nevia-dispatcher-build:
+  stage: build
+  script:
+    - cd nevia-dispatcher
+    - mvn clean install
+  artifacts:
+    paths:
+      - nevia-dispatcher/target/*.jar
+  tags:
+    - runner-jack
+
+nevia-dispatcher-test:
+  stage: test
+  needs: ["nevia-dispatcher-build"]
+  script:
+    - cd nevia-dispatcher
+    - mvn clean
+    - mvn compile
+    - mvn test
+  tags:
+    - runner-jack
+
+nevia-dispatcher-deploy:
+  stage: deploy
+  needs: ["nevia-dispatcher-test"]
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'    
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY_DISP1_PROD" | tr -d '\r' | ssh-add -
+    - echo "$SSH_KEY_DISP2_PROD" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan 192.168.3.4 >> ~/.ssh/known_hosts
+    - ssh-keyscan 192.168.3.5 >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - scp -o StrictHostKeyChecking=no /builds/cloudbuildings/nevia/.m2/repository/com/dispatcher/dispatcher/1.0.0-RELEASE/dispatcher-1.0.0-RELEASE.jar toto@192.168.3.4:/tmp
+    - ssh -o StrictHostKeyChecking=no -tt toto@192.168.3.4 'sudo sh /opt/nevia/scripts/nevia-dispatcher-deployement.sh'
+    - scp -o StrictHostKeyChecking=no /builds/cloudbuildings/nevia/.m2/repository/com/dispatcher/dispatcher/1.0.0-RELEASE/dispatcher-1.0.0-RELEASE.jar toto@192.168.3.5:/tmp
+    - ssh -o StrictHostKeyChecking=no -tt toto@192.168.3.5 'sudo sh /opt/nevia/scripts/nevia-dispatcher-deployement.sh'
+  tags:
+    - runner-jack

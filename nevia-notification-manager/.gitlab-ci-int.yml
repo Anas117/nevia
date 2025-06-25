@@ -1,0 +1,56 @@
+stages:
+  - build
+  - test
+  - deploy
+
+image: 'maven:3.8.1-openjdk-17-slim'
+
+variables:
+  MAVEN_OPTS: >-
+    -Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true
+  MAVEN_CLI_OPTS: >-
+    --batch-mode --errors --fail-at-end --show-version --no-transfer-progress
+    -DinstallAtEnd=true -DdeployAtEnd=true
+
+cache:
+  paths:
+    - .m2/repository
+
+nevia-notification-manager-build:
+  stage: build
+  script:
+    - cd nevia-notification-manager
+    - mvn clean install -Dmaven.test.skip=true
+  artifacts:
+    paths:
+      - nevia-notification-manager/target/*.jar
+  tags:
+    - runner-jack
+
+nevia-notification-manager-test:
+  stage: test
+  needs: ["nevia-notification-manager-build"]
+  script:
+    - cd nevia-notification-manager
+    - mvn clean
+  tags:
+    - runner-jack
+
+nevia-notification-manager-deploy:
+  stage: deploy
+  needs: ["nevia-notification-manager-test"]
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'    
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY_NOTIFICATION_INT" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan 192.168.3.21 >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - scp -o StrictHostKeyChecking=no /builds/cloudbuildings/nevia/.m2/repository/com/example/nevia-notification-manager/1.0.0-RELEASE/nevia-notification-manager-1.0.0-RELEASE.jar toto@192.168.3.21:/tmp
+    - ssh -o StrictHostKeyChecking=no -tt toto@192.168.3.21 'sudo sh /opt/nevia/scripts/nevia-notification-manager-deployement.sh'
+
+  tags:
+    - runner-jack

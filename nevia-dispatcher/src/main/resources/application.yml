@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+## endpoints to give data about microservice
+## http://adresse:port/actuator/health to if microservice is up, metrics to see consumption
+management:
+  security:
+    enabled: false
+
+  endpoints:
+    web:
+      exposure:
+        include: metrics,health
+
+spring:
+  application:
+    name: dispatcher
+  jackson:
+    deserialization:
+      fail-on-ignored-properties: false
+    serialization:
+      indent-output: false
+      write-dates-as-timestamps: false
+  profiles:
+    active: int
+
+
+feign:
+  autoconfiguration:
+    jackson:
+      enabled=true:

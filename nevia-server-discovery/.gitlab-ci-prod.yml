@@ -1,0 +1,57 @@
+stages:
+  - build
+  - test
+  - deploy
+
+image: 'maven:3.8.1-openjdk-17-slim'
+
+variables:
+  MAVEN_OPTS: >-
+    -Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true
+  MAVEN_CLI_OPTS: >-
+    --batch-mode --errors --fail-at-end --show-version --no-transfer-progress
+    -DinstallAtEnd=true -DdeployAtEnd=true
+
+cache:
+  paths:
+    - .m2/repository
+
+nevia-server-discovery-build:
+  stage: build
+  script:
+    - cd nevia-server-discovery
+    - mvn clean install
+  artifacts:
+    paths:
+      - nevia-server-discovery/target/*.jar
+  tags:
+    - runner-jack
+
+nevia-server-discovery-test:
+  stage: test
+  needs: ["nevia-server-discovery-build"]
+  script:
+    - cd nevia-server-discovery
+    - mvn clean
+    - mvn compile
+    - mvn test
+  tags:
+    - runner-jack
+
+nevia-server-discovery-deploy:
+  stage: deploy
+  needs: ["nevia-server-discovery-test"]
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'    
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY_RP_PROD" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan 192.168.3.3 >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - scp -o StrictHostKeyChecking=no /builds/cloudbuildings/nevia/.m2/repository/com/example/nevia-server-discovery/1.0.0-RELEASE/nevia-server-discovery-1.0.0-RELEASE.jar toto@192.168.3.3:/tmp
+    - ssh -o StrictHostKeyChecking=no -tt toto@192.168.3.3 'sudo sh /opt/nevia/scripts/nevia-discovery-deployement.sh'
+  tags:
+    - runner-jack

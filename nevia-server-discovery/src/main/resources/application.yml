@@ -1,0 +1,13 @@
+server.port: 8761
+
+spring:
+  application:
+    name: server-discovery
+  profiles:
+    active: int
+
+eureka:
+  client:
+    ## avoid the server registering to itself
+    fetch-registry: false
+    register-with-eureka: false

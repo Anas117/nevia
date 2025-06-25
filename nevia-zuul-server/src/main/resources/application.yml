@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: zuul-server
+  profiles:
+    active: int
+  cloud:
+    gateway:
+      routes:
+        - id: dispatcher
+          uri: lb://dispatcher
+          predicates:
+            - Path=/dispatcher/**
+          filters:
+            - RemoveRequestHeader=Cookie, Set-Cookie, Authorization
+            - StripPrefix=1
+
+        - id: notification-manager
+          uri: lb://notification-manager-service
+          predicates:
+            - Path=/notification/**
+          filters:
+            - RemoveRequestHeader=Cookie, Set-Cookie, Authorization
+            - StripPrefix=1
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+
+
+server:
+  port: 9004
+
+
+
+

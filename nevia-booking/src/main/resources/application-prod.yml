@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.1.15:5432/neviardb
+    username: postgres
+    password: toto
+  rabbbitmq:
+    host: 192.168.1.20
+    port: 5672
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://192.168.1.2:8761/eureka
+

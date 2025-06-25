@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "621356107606",
+    "project_id": "pds-ing3",
+    "storage_bucket": "pds-ing3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:621356107606:android:7546fc258f7a61ad4078f7",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "621356107606-k5jlrpg4b0t1dq51jukckpcqbon8nlhd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRYlmWVl5_T8dgXa606ySGODpaU9_R7ng"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "621356107606-k5jlrpg4b0t1dq51jukckpcqbon8nlhd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

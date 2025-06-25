@@ -1,0 +1,27 @@
+server:
+  port: 9876
+spring:
+  application.name: user-service
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  profiles:
+    active: int
+
+## endpoints to give data about microservice
+## http://adresse:port/actuator/health to if microservice is up, metrics to see consumption
+management:
+  security:
+    enabled: false
+
+  endpoints:
+    web:
+      exposure:
+        include: metrics,health
+

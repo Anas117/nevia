@@ -1,0 +1,18 @@
+server:
+  port: 9877
+
+spring:
+  application.name: mail-service
+  profiles:
+    active: localhost
+
+## endpoints to give data about microservice
+## http://adresse:port/actuator/health to if microservice is up, metrics to see consumption
+management:
+  security:
+    enabled: false
+
+  endpoints:
+    web:
+      exposure:
+        include: metrics,health
